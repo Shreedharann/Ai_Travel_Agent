@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Chat Assistant</title>
+    <!-- Tailwind CSS v4 -->
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <!-- Google Fonts: Playfair Display & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Tailwind CSS v4 class-based dark mode variant configuration -->
+    <style type="text/tailwindcss">
+        @variant dark (&:where(.dark, .dark *));
+    </style>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .serif-font {
+            font-family: 'Playfair Display', Georgia, serif;
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar styling for a cleaner look */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.3);
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(156, 163, 175, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-stone-50 dark:bg-stone-950 text-stone-800 dark:text-stone-200 min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Top Navigation / Header -->
+    <header class="border-b border-stone-200 dark:border-stone-800 bg-white/80 dark:bg-stone-900/80 backdrop-blur-md sticky top-0 z-50 transition-all duration-300">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-stone-900 dark:bg-stone-100 flex items-center justify-center text-white dark:text-stone-900 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="serif-font text-xl font-bold tracking-tight text-stone-900 dark:text-white">Classic Chat</h1>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 font-medium">Spring AI &amp; Thymeleaf Demo</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- Theme Toggle Button -->
+                <button id="themeToggleBtn" class="p-2 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800 transition-all duration-200 cursor-pointer" title="Toggle Theme">
+                    <!-- Sun Icon (Visible in Dark Mode) -->
+                    <svg id="sunIcon" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                    </svg>
+                    <!-- Moon Icon (Visible in Light Mode) -->
+                    <svg id="moonIcon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+                <button id="clearChatBtn" class="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white border border-stone-200 dark:border-stone-800 hover:border-stone-400 dark:hover:border-stone-600 px-3 py-1.5 rounded transition-all duration-200 cursor-pointer">
+                    Clear History
+                </button>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-xs text-stone-500 dark:text-stone-400 font-medium">Online</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 md:px-6 py-6 flex flex-col justify-between overflow-hidden">
+        <!-- Chat History Wrapper -->
+        <div class="flex-1 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl shadow-sm flex flex-col overflow-hidden h-[calc(100vh-14rem)] transition-colors duration-300">
+            
+            <!-- Welcome Info / Initial State -->
+            <div id="welcomeScreen" class="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto">
+                <div class="w-16 h-16 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-600 dark:text-stone-300 mb-4 border border-stone-200 dark:border-stone-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                    </svg>
+                </div>
+                <h2 class="serif-font text-2xl font-semibold text-stone-900 dark:text-white mb-2">Welcome to Classic Chat</h2>
+                <p class="text-sm text-stone-500 dark:text-stone-400 mb-6">A refined interface powered by Spring AI. Start a conversation below to begin.</p>
+                <div class="grid grid-cols-2 gap-3 w-full text-left">
+                    <button class="suggestion-btn text-xs p-3 border border-stone-200 dark:border-stone-850 rounded-lg text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 hover:border-stone-400 dark:hover:border-stone-600 transition-all duration-200 text-left">
+                        <span class="font-semibold text-stone-900 dark:text-white block mb-1">Explain Recursion</span>
+                        Define it simply with a real-life analogy.
+                    </button>
+                    <button class="suggestion-btn text-xs p-3 border border-stone-200 dark:border-stone-850 rounded-lg text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 hover:border-stone-400 dark:hover:border-stone-600 transition-all duration-200 text-left">
+                        <span class="font-semibold text-stone-900 dark:text-white block mb-1">Write a Poem</span>
+                        Create a short classic poem about rain.
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages List -->
+            <div id="messageContainer" class="hidden flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                <!-- Messages will be injected here dynamically -->
+            </div>
+
+            <!-- Typing Indicator (Hidden by default) -->
+            <div id="typingIndicator" class="hidden px-6 py-4 border-t border-stone-100 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/50 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-stone-200 dark:bg-stone-700 flex items-center justify-center text-xs text-stone-500 dark:text-stone-300 font-semibold select-none">
+                    AI
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-stone-400 dark:bg-stone-500 animate-bounce" style="animation-delay: 0ms"></span>
+                    <span class="w-2 h-2 rounded-full bg-stone-400 dark:bg-stone-500 animate-bounce" style="animation-delay: 150ms"></span>
+                    <span class="w-2 h-2 rounded-full bg-stone-400 dark:bg-stone-500 animate-bounce" style="animation-delay: 300ms"></span>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="border-t border-stone-200 dark:border-stone-800 p-4 bg-stone-50/70 dark:bg-stone-900/70 backdrop-blur-sm">
+                <form id="chatForm" class="flex gap-3 items-end">
+                    <textarea 
+                        id="userInput" 
+                        placeholder="Type a message or instruction... (Enter to send, Shift+Enter for new line)" 
+                        rows="1"
+                        class="flex-1 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 border border-stone-300 dark:border-stone-800 focus:border-stone-950 dark:focus:border-stone-100 rounded-lg px-4 py-2.5 text-sm shadow-inner transition-all duration-200 outline-none resize-none min-h-[42px] max-h-[160px] custom-scrollbar"
+                    ></textarea>
+                    <button 
+                        type="submit" 
+                        class="bg-stone-900 dark:bg-stone-100 hover:bg-stone-800 dark:hover:bg-white text-white dark:text-stone-900 text-sm font-medium px-5 py-2.5 rounded-lg shadow-sm hover:shadow transition-all duration-200 flex items-center gap-2 cursor-pointer h-[42px]"
+                    >
+                        <span>Send</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Custom JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatForm = document.getElementById('chatForm');
+            const userInput = document.getElementById('userInput');
+            const messageContainer = document.getElementById('messageContainer');
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            const typingIndicator = document.getElementById('typingIndicator');
+            const clearChatBtn = document.getElementById('clearChatBtn');
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const suggestionBtns = document.querySelectorAll('.suggestion-btn');
+
+            // Configure Marked.js options
+            marked.setOptions({
+                breaks: true,
+                gfm: true
+            });
+
+            // Initialize Dark Mode state from localStorage or system theme preferences
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+                enableDarkMode(true);
+            } else {
+                enableDarkMode(false);
+            }
+
+            // Theme toggle listener
+            themeToggleBtn.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                enableDarkMode(!isDark);
+            });
+
+            function enableDarkMode(shouldDark) {
+                if (shouldDark) {
+                    document.documentElement.classList.add('dark');
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+
+            // Auto-resize textarea logic
+            userInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+
+            // Handle keyboard event on textarea (Enter to send, Shift+Enter for new line)
+            userInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    chatForm.dispatchEvent(new Event('submit'));
+                }
+            });
+
+            // Helper to generate a unique UUID for conversation sessions
+            function generateUUID() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+
+            // Initialize or retrieve conversation session ID
+            let conversationId = localStorage.getItem('classic_chat_conversation_id');
+            if (!conversationId) {
+                conversationId = generateUUID();
+                localStorage.setItem('classic_chat_conversation_id', conversationId);
+            }
+
+            // Initialize chat history array in local storage
+            let chatHistory = JSON.parse(localStorage.getItem('classic_chat_history') || '[]');
+
+            // Render existing history on load
+            if (chatHistory.length > 0) {
+                welcomeScreen.classList.add('hidden');
+                messageContainer.classList.remove('hidden');
+                chatHistory.forEach(msg => appendMessage(msg.role, msg.content, false));
+                scrollToBottom();
+            }
+
+            // Form Submit handler
+            chatForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const text = userInput.value.trim();
+                if (!text) return;
+
+                // Clear input and reset textarea height
+                userInput.value = '';
+                userInput.style.height = 'auto';
+                sendMessage(text);
+            });
+
+            // Suggestion buttons click handler
+            suggestionBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const title = btn.querySelector('span').innerText;
+                    sendMessage(title);
+                });
+            });
+
+            // Clear chat handler
+            clearChatBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to clear your chat history?')) {
+                    chatHistory = [];
+                    localStorage.removeItem('classic_chat_history');
+                    // Reset backend context by generating a new session ID
+                    conversationId = generateUUID();
+                    localStorage.setItem('classic_chat_conversation_id', conversationId);
+                    messageContainer.innerHTML = '';
+                    messageContainer.classList.add('hidden');
+                    welcomeScreen.classList.remove('hidden');
+                }
+            });
+
+            // Send message function
+            async function sendMessage(text) {
+                // Add user message to UI and history
+                appendMessage('user', text);
+                chatHistory.push({ role: 'user', content: text });
+                saveHistory();
+
+                // Hide welcome screen if first message
+                welcomeScreen.classList.add('hidden');
+                messageContainer.classList.remove('hidden');
+                scrollToBottom();
+
+                // Show typing indicator
+                typingIndicator.classList.remove('hidden');
+                scrollToBottom();
+
+                try {
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'text/plain',
+                            'Conversation-Id': conversationId
+                        },
+                        body: text
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to get response from server.');
+                    }
+
+                    const reply = await response.text();
+
+                    // Hide typing indicator
+                    typingIndicator.classList.add('hidden');
+
+                    // Append bot message to UI and history
+                    appendMessage('assistant', reply);
+                    chatHistory.push({ role: 'assistant', content: reply });
+                    saveHistory();
+                    scrollToBottom();
+                } catch (error) {
+                    console.error('Error contacting chat API:', error);
+                    typingIndicator.classList.add('hidden');
+                    appendMessage('system', 'Sorry, I encountered an error communicating with the chat service.');
+                    scrollToBottom();
+                }
+            }
+
+            // Append message to DOM
+            function appendMessage(role, content, animate = true) {
+                const messageWrapper = document.createElement('div');
+                messageWrapper.className = `flex gap-3 max-w-[85%] ${role === 'user' ? 'ml-auto flex-row-reverse' : ''}`;
+                if (animate) {
+                    messageWrapper.className += ' transition-all duration-300 opacity-0 translate-y-2';
+                }
+
+                // Avatar
+                const avatar = document.createElement('div');
+                avatar.className = `w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold select-none flex-shrink-0 ${
+                    role === 'user' 
+                        ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900' 
+                        : role === 'system'
+                        ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200'
+                        : 'bg-stone-200 text-stone-700 dark:bg-stone-800 dark:text-stone-300'
+                }`;
+                avatar.innerText = role === 'user' ? 'U' : role === 'system' ? '!' : 'AI';
+
+                // Content Bubble
+                const bubble = document.createElement('div');
+                bubble.className = `p-3.5 rounded-xl text-sm leading-relaxed ${
+                    role === 'user' 
+                        ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-sm' 
+                        : role === 'system'
+                        ? 'bg-rose-50 text-rose-800 border border-rose-100 dark:bg-rose-950/20 dark:border-rose-900/40 dark:text-rose-200'
+                        : 'bg-stone-50 border border-stone-200 text-stone-800 dark:bg-stone-900 dark:border-stone-800 dark:text-stone-200 shadow-xs'
+                }`;
+
+                // Parse Markdown content for AI
+                if (role === 'assistant') {
+                    bubble.innerHTML = marked.parse(content);
+                    // Add Tailwind styles to parsed elements inside AI responses
+                    bubble.querySelectorAll('pre').forEach(pre => {
+                        pre.className = 'bg-stone-100 dark:bg-stone-950 text-stone-900 dark:text-stone-100 p-3 rounded-lg overflow-x-auto code-font my-2.5 border border-stone-200 dark:border-stone-800';
+                    });
+                    bubble.querySelectorAll('code:not(pre code)').forEach(code => {
+                        code.className = 'bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-100 px-1.5 py-0.5 rounded code-font text-xs font-semibold';
+                    });
+                    bubble.querySelectorAll('ul').forEach(ul => {
+                        ul.className = 'list-disc pl-5 my-2 space-y-1';
+                    });
+                    bubble.querySelectorAll('ol').forEach(ol => {
+                        ol.className = 'list-decimal pl-5 my-2 space-y-1';
+                    });
+                    bubble.querySelectorAll('p').forEach(p => {
+                        p.className = 'mb-2 last:mb-0';
+                    });
+                } else {
+                    bubble.innerText = content;
+                }
+
+                messageWrapper.appendChild(avatar);
+                messageWrapper.appendChild(bubble);
+                messageContainer.appendChild(messageWrapper);
+
+                if (animate) {
+                    // Trigger reflow for animation
+                    setTimeout(() => {
+                        messageWrapper.classList.remove('opacity-0', 'translate-y-2');
+                    }, 50);
+                }
+            }
+
+            function saveHistory() {
+                localStorage.setItem('classic_chat_history', JSON.stringify(chatHistory));
+            }
+
+            function scrollToBottom() {
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>
