@@ -136,3 +136,8 @@ The agent will:
 2. Check for hotels in Goa.
 3. Fetch the weather forecast for Goa on `2026-08-21`.
 4. Calculate options that fit within your budget limit of `₹7000` and return a tailored plan!
+
+
+## ScreenShots
+<img width="1312" height="1199" alt="AI Goa Travel Itinerary Demo" src="https://github.com/user-attachments/assets/ae715874-9f4f-41af-8e8d-8831ce44cd33" />
+
